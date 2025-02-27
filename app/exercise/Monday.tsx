@@ -3,10 +3,10 @@ import {
   StyleSheet,
   Text,
   View,
-  TextInput,
   Button,
   TouchableOpacity,
   Alert,
+  TextInput,
   ToastAndroid,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,18 +19,18 @@ interface ExerciseItem {
   checked: boolean;
 }
 
-const WorkoutTracker = () => {
+const Monday = () => {
   const [exerciseList, setExerciseList] = useState<ExerciseItem[]>([]);
   const [newExerciseName, setNewExerciseName] = useState<string>("");
-  const [newSets, setNewSets] = useState<number | string>("");
-  const [newReps, setNewReps] = useState<number | string>("");
+  const [newSets, setNewSets] = useState<number>(0); // Initialize with a default value
+  const [newReps, setNewReps] = useState<number>(0); // Initialize with a default value
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [updateIndex, setUpdateIndex] = useState<number | null>(null);
 
   // Load exercises from AsyncStorage when the component mounts or when it gains focus
   const loadExercises = async () => {
     try {
-      const storedExercises = await AsyncStorage.getItem("workoutExercises");
+      const storedExercises = await AsyncStorage.getItem("MondayExercises");
       if (storedExercises) {
         setExerciseList(JSON.parse(storedExercises)); // Parse the JSON string to an array
       }
@@ -57,32 +57,20 @@ const WorkoutTracker = () => {
   };
 
   const addExercise = (): void => {
-    if (!newSets || !newReps) {
-      ToastAndroid.show(
-        "Please provide valid exercise details.",
-        ToastAndroid.SHORT
-      );
-      return;
-    }
-
-    if (
-      newExerciseName.trim() &&
-      !isNaN(Number(newSets)) &&
-      !isNaN(Number(newReps))
-    ) {
+    if (newExerciseName.trim() && newSets > 0 && newReps > 0) {
       const updatedList = [
         ...exerciseList,
         {
           name: newExerciseName,
-          sets: Number(newSets),
-          reps: Number(newReps),
+          sets: newSets,
+          reps: newReps,
           checked: false,
         },
       ];
       setExerciseList(updatedList);
       setNewExerciseName(""); // Clear input after adding
-      setNewSets(""); // Clear sets input
-      setNewReps(""); // Clear reps input
+      setNewSets(1); // Reset to default value
+      setNewReps(1); // Reset to default value
       saveExercises(updatedList);
     } else {
       Alert.alert("Invalid input", "Please provide valid exercise details.");
@@ -90,30 +78,18 @@ const WorkoutTracker = () => {
   };
 
   const updateExercise = (): void => {
-    if (!newSets || !newReps) {
-      ToastAndroid.show(
-        "Please provide valid exercise details.",
-        ToastAndroid.SHORT
-      );
-      return;
-    }
-
-    if (
-      newExerciseName.trim() &&
-      !isNaN(Number(newSets)) &&
-      !isNaN(Number(newReps))
-    ) {
+    if (newExerciseName.trim() && newSets > 0 && newReps > 0) {
       const updatedList = [...exerciseList];
       updatedList[updateIndex as number] = {
         name: newExerciseName,
-        sets: Number(newSets),
-        reps: Number(newReps),
+        sets: newSets,
+        reps: newReps,
         checked: false,
       };
       setExerciseList(updatedList);
       setNewExerciseName(""); // Clear input after updating
-      setNewSets(""); // Clear sets input
-      setNewReps(""); // Clear reps input
+      setNewSets(1); // Reset to default value
+      setNewReps(1); // Reset to default value
       setIsUpdating(false);
       setUpdateIndex(null); // Clear update index
       saveExercises(updatedList);
@@ -134,7 +110,6 @@ const WorkoutTracker = () => {
         {
           text: "OK",
           onPress: () => {
-            // Only delete the exercise if user clicks "OK"
             const updatedList = exerciseList.filter((_, i) => i !== index);
             setExerciseList(updatedList);
             saveExercises(updatedList);
@@ -147,10 +122,19 @@ const WorkoutTracker = () => {
 
   const saveExercises = async (exercises: ExerciseItem[]) => {
     try {
-      await AsyncStorage.setItem("workoutExercises", JSON.stringify(exercises)); // Save as a JSON string
+      await AsyncStorage.setItem("MondayExercises", JSON.stringify(exercises)); // Save as a JSON string
     } catch (error) {
       console.error("Failed to save exercises", error);
     }
+  };
+
+  // Increment and decrement functions
+  const increment = (setter: React.Dispatch<React.SetStateAction<number>>) => {
+    setter((prev) => prev + 1);
+  };
+
+  const decrement = (setter: React.Dispatch<React.SetStateAction<number>>) => {
+    setter((prev) => Math.max(prev - 1, 1)); // Prevent going below 1
   };
 
   return (
@@ -182,8 +166,8 @@ const WorkoutTracker = () => {
                 setIsUpdating(true);
                 setUpdateIndex(index);
                 setNewExerciseName(item.name);
-                setNewSets(String(item.sets));
-                setNewReps(String(item.reps));
+                setNewSets(item.sets);
+                setNewReps(item.reps);
               }}
             />
             <Button title="Delete" onPress={() => deleteExercise(index)} />
@@ -196,20 +180,25 @@ const WorkoutTracker = () => {
         onChangeText={setNewExerciseName}
         placeholder="Exercise Name"
       />
-      <TextInput
-        style={styles.input}
-        value={String(newSets)}
-        onChangeText={setNewSets}
-        placeholder="Sets"
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        value={String(newReps)}
-        onChangeText={setNewReps}
-        placeholder="Reps"
-        keyboardType="numeric"
-      />
+      <View style={styles.inputRow}>
+        <View style={styles.setRepContainer}>
+          <Text>Sets:</Text>
+          <View style={styles.numberSelector}>
+            <Button title="-" onPress={() => decrement(setNewSets)} />
+            <Text style={styles.number}>{newSets}</Text>
+            <Button title="+" onPress={() => increment(setNewSets)} />
+          </View>
+        </View>
+        <View style={styles.setRepContainer}>
+          <Text>Reps:</Text>
+          <View style={styles.numberSelector}>
+            <Button title="-" onPress={() => decrement(setNewReps)} />
+            <Text style={styles.number}>{newReps}</Text>
+            <Button title="+" onPress={() => increment(setNewReps)} />
+          </View>
+        </View>
+      </View>
+
       <Button
         title={isUpdating ? "Update Exercise" : "Add Exercise"}
         onPress={isUpdating ? updateExercise : addExercise}
@@ -218,7 +207,7 @@ const WorkoutTracker = () => {
   );
 };
 
-export default WorkoutTracker;
+export default Monday;
 
 const styles = StyleSheet.create({
   container: {
@@ -273,5 +262,21 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     marginLeft: 10,
+  },
+  inputRow: {
+    flexDirection: "row", // Arrange sets and reps in a row
+    justifyContent: "space-between",
+  },
+  setRepContainer: {
+    flexDirection: "column", // Each container will have vertical alignment
+    alignItems: "center",
+  },
+  numberSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  number: {
+    marginHorizontal: 10,
+    fontSize: 16,
   },
 });
