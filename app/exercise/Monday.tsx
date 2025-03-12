@@ -26,6 +26,7 @@ const Monday = () => {
   const [newReps, setNewReps] = useState<number>(0); // Initialize with a default value
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [updateIndex, setUpdateIndex] = useState<number | null>(null);
+  const [toggleAddExercise, setToggleAddExercise] = useState<boolean>(false);
 
   // Load exercises from AsyncStorage when the component mounts or when it gains focus
   const loadExercises = async () => {
@@ -54,6 +55,10 @@ const Monday = () => {
     updatedList[index].checked = !updatedList[index].checked;
     setExerciseList(updatedList);
     saveExercises(updatedList);
+  };
+
+  const addNewExercise = () => {
+    setToggleAddExercise(!toggleAddExercise);
   };
 
   const addExercise = (): void => {
@@ -174,34 +179,42 @@ const Monday = () => {
           </View>
         </View>
       ))}
-      <TextInput
-        style={styles.input}
-        value={newExerciseName}
-        onChangeText={setNewExerciseName}
-        placeholder="Exercise Name"
-      />
-      <View style={styles.inputRow}>
-        <View style={styles.setRepContainer}>
-          <Text>Sets:</Text>
-          <View style={styles.numberSelector}>
-            <Button title="-" onPress={() => decrement(setNewSets)} />
-            <Text style={styles.number}>{newSets}</Text>
-            <Button title="+" onPress={() => increment(setNewSets)} />
+      <View
+        style={toggleAddExercise ? { display: "none" } : { display: "flex" }}
+      >
+        <TextInput
+          style={styles.input}
+          value={newExerciseName}
+          onChangeText={setNewExerciseName}
+          placeholder="Exercise Name"
+        />
+        <View style={styles.inputRow}>
+          <View style={styles.setRepContainer}>
+            <Text>Sets:</Text>
+            <View style={styles.numberSelector}>
+              <Button title="-" onPress={() => decrement(setNewSets)} />
+              <Text style={styles.number}>{newSets}</Text>
+              <Button title="+" onPress={() => increment(setNewSets)} />
+            </View>
+          </View>
+          <View style={styles.setRepContainer}>
+            <Text>Reps:</Text>
+            <View style={styles.numberSelector}>
+              <Button title="-" onPress={() => decrement(setNewReps)} />
+              <Text style={styles.number}>{newReps}</Text>
+              <Button title="+" onPress={() => increment(setNewReps)} />
+            </View>
           </View>
         </View>
-        <View style={styles.setRepContainer}>
-          <Text>Reps:</Text>
-          <View style={styles.numberSelector}>
-            <Button title="-" onPress={() => decrement(setNewReps)} />
-            <Text style={styles.number}>{newReps}</Text>
-            <Button title="+" onPress={() => increment(setNewReps)} />
-          </View>
-        </View>
-      </View>
 
+        <Button
+          title={isUpdating ? "Update Exercise" : "Add Exercise"}
+          onPress={isUpdating ? updateExercise : addExercise}
+        />
+      </View>
       <Button
-        title={isUpdating ? "Update Exercise" : "Add Exercise"}
-        onPress={isUpdating ? updateExercise : addExercise}
+        title={toggleAddExercise ? "Cancel" : "Add Exercise"}
+        onPress={addNewExercise}
       />
     </View>
   );
