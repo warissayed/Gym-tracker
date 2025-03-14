@@ -15,18 +15,18 @@ import { useFocusEffect } from "@react-navigation/native"; // For refreshing whe
 interface ExerciseItem {
   name: string;
   sets: number;
-  reps: number;
+  reps: number[];
   checked: boolean;
 }
 
 const Monday = () => {
   const [exerciseList, setExerciseList] = useState<ExerciseItem[]>([]);
   const [newExerciseName, setNewExerciseName] = useState<string>("");
-  const [newSets, setNewSets] = useState<number>(0); // Initialize with a default value
-  const [newReps, setNewReps] = useState<number>(0); // Initialize with a default value
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [updateIndex, setUpdateIndex] = useState<number | null>(null);
   const [toggleAddExercise, setToggleAddExercise] = useState<boolean>(false);
+  const [newSets, setNewSets] = useState<number>(0);
+  const [newReps, setNewReps] = useState<number[]>([0]);
 
   // Load exercises from AsyncStorage when the component mounts or when it gains focus
   const loadExercises = async () => {
@@ -50,6 +50,26 @@ const Monday = () => {
     loadExercises();
   });
 
+  const handleSetsChange = (text: string) => {
+    if (text === "") {
+      setNewSets(0);
+      return;
+    }
+
+    let value = parseInt(text);
+    if (!isNaN(value)) {
+      if (value > 5) value = 5; // Cap at 5 sets
+      setNewSets(value);
+      setNewReps(new Array(value).fill(0)); // Initialize reps array
+    }
+  };
+
+  const handleRepsChange = (index: number, text: string) => {
+    const updatedReps = [...newReps];
+    updatedReps[index] = parseInt(text) || 0; // Convert input to number
+    setNewReps(updatedReps);
+  };
+
   const toggleCheckbox = (index: number): void => {
     const updatedList = [...exerciseList];
     updatedList[index].checked = !updatedList[index].checked;
@@ -62,28 +82,32 @@ const Monday = () => {
   };
 
   const addExercise = (): void => {
-    if (newExerciseName.trim() && newSets > 0 && newReps > 0) {
-      const updatedList = [
-        ...exerciseList,
-        {
-          name: newExerciseName,
-          sets: newSets,
-          reps: newReps,
-          checked: false,
-        },
-      ];
-      setExerciseList(updatedList);
-      setNewExerciseName(""); // Clear input after adding
-      setNewSets(1); // Reset to default value
-      setNewReps(1); // Reset to default value
-      saveExercises(updatedList);
-    } else {
+    const sets = newSets || 0;
+    const reps = newReps.map((rep) => rep || 0);
+
+    if (!newExerciseName.trim() || sets === 0 || reps.includes(0)) {
       Alert.alert("Invalid input", "Please provide valid exercise details.");
+      return;
     }
+
+    const updatedList = [
+      ...exerciseList,
+      {
+        name: newExerciseName,
+        sets,
+        reps,
+        checked: false,
+      },
+    ];
+    setExerciseList(updatedList);
+    setNewExerciseName("");
+    setNewSets(0);
+    setNewReps([]);
+    saveExercises(updatedList);
   };
 
   const updateExercise = (): void => {
-    if (newExerciseName.trim() && newSets > 0 && newReps > 0) {
+    if (newExerciseName.trim() && newSets > 0 && newReps > [0]) {
       const updatedList = [...exerciseList];
       updatedList[updateIndex as number] = {
         name: newExerciseName,
@@ -93,8 +117,8 @@ const Monday = () => {
       };
       setExerciseList(updatedList);
       setNewExerciseName(""); // Clear input after updating
-      setNewSets(1); // Reset to default value
-      setNewReps(1); // Reset to default value
+      setNewSets(0); // Reset to default value
+      setNewReps([0]); // Reset to default value
       setIsUpdating(false);
       setUpdateIndex(null); // Clear update index
       saveExercises(updatedList);
@@ -182,7 +206,7 @@ const Monday = () => {
       <View
         style={toggleAddExercise ? { display: "none" } : { display: "flex" }}
       >
-        <TextInput
+        {/* <TextInput
           style={styles.input}
           value={newExerciseName}
           onChangeText={setNewExerciseName}
@@ -205,7 +229,36 @@ const Monday = () => {
               <Button title="+" onPress={() => increment(setNewReps)} />
             </View>
           </View>
-        </View>
+        </View> */}
+        <TextInput
+          style={styles.input}
+          value={newExerciseName}
+          onChangeText={setNewExerciseName}
+          placeholder="Exercise Name"
+        />
+
+        <TextInput
+          style={styles.input}
+          keyboardType="numeric"
+          value={newSets === 0 ? "" : newSets.toString()} // Show empty string instead of 0
+          onChangeText={handleSetsChange}
+          placeholder="Enter sets (max 5)"
+          maxLength={1}
+        />
+
+        {newSets > 0 &&
+          newReps.map((rep, index) => (
+            <View key={index} style={styles.setRepContainer}>
+              <Text>Set {index + 1} Reps:</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="numeric"
+                value={rep.toString()} // Convert to string for input
+                onChangeText={(text) => handleRepsChange(index, text)}
+                placeholder="Enter reps"
+              />
+            </View>
+          ))}
 
         <Button
           title={isUpdating ? "Update Exercise" : "Add Exercise"}
