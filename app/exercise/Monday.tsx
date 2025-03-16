@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
   ToastAndroid,
+  ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native"; // For refreshing when navigating between screens
@@ -168,6 +169,9 @@ const Monday = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.exerciseItem}>
+        <Text> {"<  "}Monday</Text>
+      </View>
       {exerciseList.map((item, index) => (
         <View
           key={index}
@@ -184,9 +188,14 @@ const Monday = () => {
             >
               {item.name}
             </Text>
-            <Text style={styles.detailsText}>
-              Sets: {item.sets} | Reps: {item.reps}
-            </Text>
+            <Text style={styles.detailsText}>Sets: {item.sets} |</Text>
+          </View>
+          <View>
+            {item.reps.map((rep, i) => (
+              <Text key={i} style={styles.detailsText}>
+                rep {i + 1}: {rep}
+              </Text>
+            ))}
           </View>
           <View style={styles.buttonContainer}>
             <Button
@@ -250,13 +259,33 @@ const Monday = () => {
           newReps.map((rep, index) => (
             <View key={index} style={styles.setRepContainer}>
               <Text>Set {index + 1} Reps:</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={rep.toString()} // Convert to string for input
-                onChangeText={(text) => handleRepsChange(index, text)}
-                placeholder="Enter reps"
-              />
+              <View style={styles.numberSelector}>
+                <Button
+                  title="-"
+                  onPress={() => {
+                    const updatedReps = [...newReps];
+                    updatedReps[index] = Math.max(updatedReps[index] - 1, 1); // Prevent below 1
+                    setNewReps(updatedReps);
+                  }}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={rep.toString()} // Convert to string for input
+                  onChangeText={(text) => handleRepsChange(index, text)}
+                  placeholder="Enter reps"
+                />
+
+                <Button
+                  title="+"
+                  onPress={() => {
+                    const updatedReps = [...newReps];
+                    updatedReps[index] += 1;
+                    setNewReps(updatedReps);
+                  }}
+                />
+              </View>
             </View>
           ))}
 
@@ -279,7 +308,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#000",
   },
   input: {
     height: 40,

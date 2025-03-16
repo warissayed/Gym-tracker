@@ -67,6 +67,12 @@ type ValidExercisePath =
   | "/exercise/Friday"
   | "/exercise/Saturday"
   | "/exercise/Sunday";
+
+const user = {
+  name: "Waris Sayed",
+  profilePhoto: "https://avatar.iran.liara.run/public/17", // Replace with an actual image URL or local source
+  streak: 7, // Example streak value
+};
 const Index = () => {
   const renderItem = ({ item }: { item: ExerciseData }) => {
     const path = `/exercise/${item.day}` as ValidExercisePath; // Correctly referencing item.day
@@ -90,7 +96,22 @@ const Index = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Exercises for the Day</Text>
+      <Text style={styles.dateText}>
+        {new Date().getDate()}
+        {", "}
+        {new Date().toLocaleString("en-US", { month: "long" })}
+        {new Date().getFullYear()}
+      </Text>
+      <View style={styles.streakContainer}>
+        <View style={styles.streakSection}>
+          <Image
+            source={require("../../assets/images/fire.png")}
+            style={styles.fireImage}
+          />
+          <Text style={styles.streakText}>{user.streak} </Text>
+          <Text style={styles.streakText}>Day Streak</Text>
+        </View>
+      </View>
 
       <FlatList
         data={exercisesData}
@@ -98,7 +119,7 @@ const Index = () => {
         keyExtractor={(item) => item.day}
       />
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.buttonContainer}
         onPress={() => {
           // Navigating to the auth/index screen
@@ -106,7 +127,7 @@ const Index = () => {
         }}
       >
         <Text style={styles.text}>Redirect to Auth Tab</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };
@@ -116,13 +137,20 @@ export default Index;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingTop: 10,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
+  },
+  dateText: {
+    fontSize: 34,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 10,
   },
   exerciseItem: {
     flexDirection: "row",
@@ -158,5 +186,31 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "white",
+  },
+  streakContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 5,
+    backgroundColor: "#000",
+    borderRadius: 15,
+    width: "45%",
+    alignSelf: "center",
+    padding: 10,
+  },
+
+  streakSection: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  fireImage: {
+    width: 25,
+    height: 25,
+    marginRight: 5,
+  },
+  streakText: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#fff",
   },
 });
