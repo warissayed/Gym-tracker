@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native"; // For refreshing when navigating between screens
+import { router } from "expo-router";
 
 interface ExerciseItem {
   name: string;
@@ -170,7 +171,13 @@ const Monday = () => {
   return (
     <View style={styles.container}>
       <View style={styles.exerciseItem}>
-        <Text> {"<  "}Monday</Text>
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/(tabs)");
+          }}
+        >
+          <Text> {"<  "}Monday</Text>
+        </TouchableOpacity>
       </View>
       {exerciseList.map((item, index) => (
         <View
@@ -308,7 +315,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
   input: {
     height: 40,
@@ -321,7 +328,7 @@ const styles = StyleSheet.create({
   exerciseItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f0f0",
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
@@ -334,7 +341,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: "#000",
+    borderColor: "#fff",
     marginRight: 10,
   },
   checkedCheckbox: {
